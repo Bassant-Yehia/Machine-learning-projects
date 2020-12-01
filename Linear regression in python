@@ -1,0 +1,135 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
+#read dataset
+df=pd.read_csv('diabetic_kidney_disease.csv')
+df.head()
+
+x=df['FBG (mg/dL)']
+y=df['UACR (mg/g creatinine)']
+
+#split dataset into training and testing data
+x_train=x[:81]
+y_train=y[:81]
+print(x_train)
+x_test=x[81:]
+y_test=y[81:]
+
+#Applying Normalization Equ on the part of data train for both col x and y
+minX = x_train.min()
+print ("-----")
+print(minX)
+print ("-----")
+diffX = x_train.max() -minX
+minY = y_train.min()
+diffy = y_train.max() -minY
+print(diffX)
+print ("-----")
+x_train=(x_train-minX)/diffX
+y_train=(y_train-minY)/diffy
+print(x_train)
+print(y_train)
+
+#comment for showing the plot of data after normalization
+'''
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Real vs predicted values")
+plt.scatter(x_train,y_train)
+#plt.plot(x_train,y_train)
+plt.show()
+'''
+
+#applying the equation of linear ang get the predicted value then calculate the error 
+#descent gradiant
+c1=0.7800
+c2=0
+alpha=0.021100
+y_predicted=c1*(x_train)+c2
+iterations=1700
+for n in range(iterations):
+ y_predicted= c1 * x_train + c2
+ c1error=0
+ for i in range(len(x_train)):
+    c1error = c1error+ (y_predicted[i]-y_train[i])
+    newc1=c1-(alpha*c1error/len(x_train))
+ c2error=0
+ for i in range(len(x_train)):
+    c2error = c2error+ (y_predicted[i]-y_train[i])*x_train[i]
+    newc2=c2-(alpha*c2error/len(x_train))
+ if abs(newc1-c1) < 0.000001 and abs(newc2-c2)<0.000001:
+   break
+ c1 = newc1
+ c2 = newc2
+
+#plot the data train
+ plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Real vs predicted values")
+plt.scatter(x_train,y_train)
+plt.plot(x_train,y_predicted)
+plt.show()
+
+
+#apply normalization the data for testing
+
+minX = min(x_test)
+print ("-----")
+print(minX)
+print ("-----")
+diffX = max(x_test) -minX
+minY = min(y_test)
+diffy = max(y_test) -minY
+print ("-----")
+x_test=(x_test-minX)/diffX
+y_test=(y_test-minY)/diffy
+#print(x_test)
+#print(y_test)
+
+#calculate predicted value and Mean Square error 
+
+for t in range(len(x_test)):
+    y_predicted=c1*(x_test)+c2
+    MSE=sum((y_test-y_predicted)**2)/(len(y_test))
+print(MSE)
+
+#plot the ubdated data  and show best fit line then changing in alpha(Learning rate) to get best fit line
+ #ys=c1-c2*x_train
+
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Real vs predicted values")
+plt.scatter(x_test,y_test)
+plt.plot(x_test,y_predicted)
+plt.show()
+
+
+
+#Draft
+'''
+c1=0
+c2=0
+alpha=0.01
+y_predicted=c1*(x_test)+c2
+iterations=1000
+for n in range(iterations):
+ y_predicted= c1 * x_test + c2
+ c1error=0
+ for i in range(len(x_test)):
+    c1error = c1error+ (y_predicted[i]-y_test[i])
+    newc1=c1-(alpha*c1error/len(x_test))
+ c2error=0
+ for i in range(len(x_test)):
+    c2error = c2error+ (y_predicted[i]-y_test[i])*x_test[i]
+    newc2=c2-(alpha*c2error/len(x_test))
+ if abs(newc1-c1) < 0.000001 and abs(newc2-c2)<0.000001:
+   break
+ c1 = newc1
+ c2 = newc2
+ #ys=c1-c2*x_train
+
+
+
