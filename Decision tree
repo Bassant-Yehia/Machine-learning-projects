@@ -1,0 +1,289 @@
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
+import graphviz
+from sklearn import tree
+
+
+#read in the data
+data = pd.read_csv("house-votes-84 (1).data",sep = ",")
+data.head()
+
+#to change "?" with -1
+cleanup_nums = {"republican":     {"republican": 0, "democrat": 1}, "n": {"n": 0, "y": 1, "?": -1 }, "y":{"n":0,"y":1,"?":-1},
+                "n.1": {"n": 0, "y": 1, "?": -1 },  "y.1":{"n":0,"y":1,"?":-1},"n.2": {"n": 0, "y": 1, "?": -1 },  "y.2":{"n":0,"y":1,"?":-1},
+                "n.3": {"n": 0, "y": 1, "?": -1 },  "y.3":{"n":0,"y":1,"?":-1},"n.4": {"n": 0, "y": 1, "?": -1 },  "y.4":{"n":0,"y":1,"?":-1},"n.5": {"n": 0, "y": 1, "?": -1 },  "y.5":{"n":0,"y":1,"?":-1},"?": {"n": 0, "y": 1, "?": -1 },  "y.6":{"n":0,"y":1,"?":-1},"y.7": {"n": 0, "y": 1, "?": -1 },  "y.8":{"n":0,"y":1,"?":-1}
+            }
+cleanup_nums
+#replacing
+obj_df = data.replace(cleanup_nums)
+obj_df.head()
+
+
+
+x=obj_df.drop(['republican'],axis=1)
+x
+y=obj_df['republican']
+y
+
+
+
+### Split train by 25% and test 75%
+
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.75, random_state=100) # 25% training and 75% test
+X_train, X_test, y_train, y_test
+
+## Rerun 3 times with random splits
+
+X_train1, X_test1, y_train1, y_test1 = train_test_split(x, y, test_size=0.75, random_state=1) # 25% training and 75% test
+X_train1, X_test1, y_train1, y_test1
+
+X_train2, X_test2, y_train2, y_test2 = train_test_split(x, y, test_size=0.75, random_state=1000) # 25% training and 75% test
+X_train2, X_test2, y_train2, y_test2
+
+X_train3, X_test3, y_train3, y_test3 = train_test_split(x, y, test_size=0.75, random_state=10) # 25% training and 75% test
+X_train3, X_test3, y_train3, y_test3
+
+
+
+### function needed
+
+# Function to perform training with entropy.
+def train_using_entropy(X_train, X_test, y_train):
+
+# Decision tree with entropy
+    clf_entropy = DecisionTreeClassifier(criterion = "entropy", random_state = 100, max_depth = 3, min_samples_leaf = 5)
+
+    # Performing training
+    clf_entropy.fit(X_train, y_train)
+    return clf_entropy
+    
+    
+    # Function to make predictions
+def prediction(X_test, clf_object):
+
+    # Predicton on test with giniIndex
+    y_pred = clf_object.predict(X_test)
+    print("Predicted values:")
+    print(y_pred)
+    return y_pred
+    
+ # Function to calculate accuracy
+def cal_accuracy(y_test, y_pred):
+    out=accuracy_score(y_test,y_pred)*100
+    print ("Accuracy : ",out)
+    print("Report : ",
+    classification_report(y_test, y_pred))
+    return out
+    
+    
+    
+    #function to calculate the score
+ def score(x,y,test_quota):
+    accuracy_list=[]
+    for i in range(5):    #Since we have to try with five different values 
+        rand_num = random.randint(1, 100)    # Generates random numbers between 1 , 100
+        print(rand_num)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=test_quota, random_state=rand_num)
+        clf_entropy = train_using_entropy(X_train, X_test, y_train)
+        y_pred_entropy = prediction(X_test, clf_entropy)
+        
+        accuracy_list.append(cal_accuracy(y_test, y_pred_entropy))
+        accuracy_np = np.array(accuracy_list)
+        if(i==4):
+            print(accuracy_list)
+            print("MAX IS : ", max(accuracy_list))
+            print("MIN IS :", min(accuracy_list))
+            print("MEAN IS:", np.mean(accuracy_np))
+            accuracy_list=[]   
+    
+#creating trees for each experiements
+  clf_entropy = train_using_entropy(X_train, X_test, y_train)
+  clf_entropy1 = train_using_entropy(X_train1, X_test1, y_train1)
+  clf_entropy2 = train_using_entropy(X_train2, X_test2, y_train2)
+  clf_entropy3 = train_using_entropy(X_train3, X_test3, y_train3)
+  
+  
+### Report the sizes and accursies of these trees in each experiement
+
+ print("Results Using Entropy 25%:")
+# Prediction using entropy
+
+y_pred_entropy = prediction(X_test, clf_entropy)
+print(cal_accuracy(y_test, y_pred_entropy))
+
+y_pred_entropy1 = prediction(X_test1, clf_entropy1)
+print(cal_accuracy(y_test1, y_pred_entropy1))
+
+y_pred_entropy2 = prediction(X_test2, clf_entropy2)
+print(cal_accuracy(y_test2, y_pred_entropy2))
+
+y_pred_entropy3 = prediction(X_test3, clf_entropy3)
+print(cal_accuracy(y_test3, y_pred_entropy3))
+
+
+
+### Measure impact of training set size on the  acc and the size of the learned tree (30%-70%)
+
+#create list for storing the accuracies.
+list2=[]
+
+X_train30, X_test30, y_train30, y_test30 = train_test_split(x, y, test_size=0.70, random_state=100) # 30% training and 70% test
+clf_entropy30 = train_using_entropy(X_train30, X_test30, y_train30)
+y_pred_entropy30 = prediction(X_test30, clf_entropy30)
+
+list2.append(cal_accuracy(y_test30, y_pred_entropy30))
+
+score(x,y, 0.70)
+
+X_train40, X_test40, y_train40, y_test40 = train_test_split(x, y, test_size=0.60, random_state=100) # 60% training and 40% test
+
+clf_entropy40 = train_using_entropy(X_train40, X_test40, y_train40)
+y_pred_entropy40 = prediction(X_test40, clf_entropy40)
+print(cal_accuracy(y_test40, y_pred_entropy40))
+
+list2.append(cal_accuracy(y_test40, y_pred_entropy40))
+
+
+print("list2 is",list2)
+
+score(x,y, 0.60)
+
+X_train50, X_test50, y_train50, y_test50 = train_test_split(x, y, test_size=0.50, random_state=100) # 50% training and 50% test
+
+clf_entropy50 = train_using_entropy(X_train50, X_test50, y_train50)
+y_pred_entropy50 = prediction(X_test50, clf_entropy50)
+print(cal_accuracy(y_test50, y_pred_entropy50))
+
+list2.append(cal_accuracy(y_test50, y_pred_entropy50))
+
+print("list2 is",list2)
+
+score(x,y, 0.50)
+
+
+X_train60, X_test60, y_train60, y_test60 = train_test_split(x, y, test_size=0.40, random_state=100) # 60% training and 40% test
+
+clf_entropy60 = train_using_entropy(X_train60, X_test60, y_train60)
+y_pred_entropy60 = prediction(X_test60, clf_entropy60)
+print(cal_accuracy(y_test60, y_pred_entropy60))
+
+list2.append(cal_accuracy(y_test60, y_pred_entropy60))
+
+print("list2 is",list2)
+
+score(x,y, 0.40)
+
+X_train70, X_test70, y_train70, y_test70 = train_test_split(x, y, test_size=0.30, random_state=100) # 70% training and 30% test
+
+clf_entropy70 = train_using_entropy(X_train70, X_test70, y_train70)
+y_pred_entropy70 = prediction(X_test70, clf_entropy70)
+print(cal_accuracy(y_test70, y_pred_entropy70))
+
+list2.append(cal_accuracy(y_test70, y_pred_entropy70))
+print("list2 is",list2)
+
+
+score(x,y, 0.30)
+
+list1=[30,40,50,60,70]
+print(list2)
+plt.plot(list1,list2)
+
+
+### Also measure the mean, max and min tree size. ● Start with training data size 40% , 50% .... Until you reach 80%.
+
+list_trees=[]
+#clf_entropy40.get_depth()
+
+list_trees.append(clf_entropy40.tree_.node_count)
+list_trees.append(clf_entropy50.tree_.node_count)
+list_trees.append(clf_entropy60.tree_.node_count)
+list_trees.append(clf_entropy70.tree_.node_count)
+list_trees.append(clf_entropy80.tree_.node_count)
+
+print("list_trees is",list_trees)
+print("max is",max(list_trees))
+print("min is",min(list_trees))
+print("mean is",statistics.mean(list_trees))
+
+
+###● Turn in two plots showing how accuracy varies with training set size and how the number of nodes in the final tree varies with training set size
+    
+    
+listNodes=[]
+listACC=[]
+a=clf_entropy40.tree_.node_count
+listNodes.append(a)
+
+b=clf_entropy50.tree_.node_count
+listNodes.append(b)
+
+
+c=clf_entropy60.tree_.node_count
+listNodes.append(c)
+
+d=clf_entropy70.tree_.node_count
+listNodes.append(d)
+
+e=clf_entropy80.tree_.node_count
+listNodes.append(e)
+
+listNodes
+
+
+s1 = accuracy_score(y_test40,y_pred_entropy40)
+listACC.append(s1)
+s2 = accuracy_score(y_test50,y_pred_entropy50)
+listACC.append(s2)
+s3 = accuracy_score(y_test60,y_pred_entropy60)
+listACC.append(s3)
+s4 = accuracy_score(y_test70,y_pred_entropy70)
+listACC.append(s4)
+s5 = accuracy_score(y_test80,y_pred_entropy80)
+listACC.append(s5)
+
+listACC
+
+plt.plot(listACC,listLeaves)
+
+
+###  Missing values and replace it by  ' _'
+
+obj_df[obj_df.isnull().any(axis=1)]
+Copy = obj_df.select_dtypes(include=['int64']).copy()
+
+Copy.replace({-1:"__"}, inplace=True)
+
+print(Copy)
+
+
+## Visualization Tree that has best accuracy
+
+import graphviz
+from sklearn import tree
+
+clf_entropy70 = train_using_entropy(X_train70, X_test70, y_train70)
+
+text_representation = tree.export_text(clf_entropy70)
+print(text_representation)
+
+with open("decistion_tree.log", "w") as fout:
+    fout.write(text_representation)
+
+    
+fig = plt.figure(figsize=(25,20))
+_ = tree.plot_tree(clf_entropy70, 
+                   feature_names=obj_df.columns,
+                   filled=True)
+                   
+                   
+fig.savefig("decistion_tree_BEST.png")                   
+
